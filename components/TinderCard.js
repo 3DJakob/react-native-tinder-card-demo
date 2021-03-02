@@ -163,7 +163,7 @@ const TinderCard = React.forwardRef(({ flickOnSwipe = true, children, onSwipe, o
     onPanResponderMove: (evt, gestureState) => {
       // The most recent move distance is gestureState.move{X,Y}
       const newLocation = { x: gestureState.dx, y: gestureState.dy, time: (new Date()).getTime() }
-      setSpeed(calcSpeed(lastLocation, newLocation))
+      setSpeed({ x: gestureState.vx, y: gestureState.vy })
       setLastLocation(newLocation)
     },
     onPanResponderTerminationRequest: (evt, gestureState) =>
@@ -190,7 +190,15 @@ const TinderCard = React.forwardRef(({ flickOnSwipe = true, children, onSwipe, o
   // })
 
   return (
-    <View {...panResponder.panHandlers} ref={element} className>
+    <View
+      {...panResponder.panHandlers} ref={element} className style={[{ color: 'red' }, {
+        transform: [
+          { translateX: lastLocation.x },
+          { translateY: lastLocation.y },
+          { rotateZ: speed.x + 'deg' }
+        ]
+      }]}
+    >
       <Text>Location: x: {Math.round(lastLocation.x)} y: {Math.round(lastLocation.y)}</Text>
       <Text>Speed: x: {Math.round(speed.x * 10) / 10} y: {Math.round(speed.y * 10) / 10}</Text>
       {children}
