@@ -172,6 +172,7 @@ const TinderCard = React.forwardRef(({ flickOnSwipe = true, children, onSwipe, o
       // The user has released all touches while this view is the
       // responder. This typically means a gesture has succeeded
       console.log('press out')
+      // TODO determine if velocity is enough and animate out or back with spring!
     }
   }), [])
 
