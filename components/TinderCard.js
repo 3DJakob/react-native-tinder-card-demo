@@ -82,37 +82,6 @@ const getSwipeDirection = (speed) => {
   }
 }
 
-const calcSpeed = (oldLocation, newLocation) => {
-  const dx = newLocation.x - oldLocation.x
-  const dy = oldLocation.y - newLocation.y
-  const dt = (newLocation.time - oldLocation.time) / 1000
-  return { x: dx / dt, y: dy / dt }
-}
-
-const translationString = (x, y) => {
-  const translation = 'translate(' + x + 'px, ' + y + 'px)'
-  return translation
-}
-
-const rotationString = (rot) => {
-  const rotation = 'rotate(' + rot + 'deg)'
-  return rotation
-}
-
-const getTranslate = (element) => {
-  const style = window.getComputedStyle(element)
-  const matrix = new WebKitCSSMatrix(style.webkitTransform)
-  const ans = { x: matrix.m41, y: matrix.m42 }
-  return ans
-}
-
-const getRotation = (element) => {
-  const style = window.getComputedStyle(element)
-  const matrix = new WebKitCSSMatrix(style.webkitTransform)
-  const ans = -Math.asin(matrix.m21) / (2 * Math.PI) * 360
-  return ans
-}
-
 const dragableTouchmove = (coordinates, element, offset, lastLocation) => {
   const pos = { x: coordinates.x + offset.x, y: coordinates.y + offset.y }
   const newLocation = { x: pos.x, y: pos.y, time: new Date().getTime() }
