@@ -1,13 +1,13 @@
 /* global WebKitCSSMatrix */
 import React, { useState } from "react";
-import { View, PanResponder, Text } from "react-native";
-import { useSpring, animated, interpolate } from "react-spring";
+import { View, PanResponder, Text, Dimensions } from "react-native";
+import { useSpring, animated, interpolate, config } from "react-spring";
 
 const settings = {
   snapBackDuration: 300,
   maxTilt: 5,
   bouncePower: 0.2,
-  swipeThreshold: 300, // px/s
+  swipeThreshold: 1.5, // need to update this threshold for RN (1.5 seems reasonable...?)
 };
 
 const getElementSize = (element) => {
@@ -23,59 +23,65 @@ const pythagoras = (x, y) => {
   return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
 };
 
-const animateOut = async (element, speed, easeIn = false) => {
-  const startPos = getTranslate(element);
-  const bodySize = getElementSize(document.body);
-  const diagonal = pythagoras(bodySize.x, bodySize.y);
+const animateOut = async (gesture, set, easeIn = false) => {
+  const startPos = { x: 0, y: 0 };
+  const speed = { x: gesture.vx, y: gesture.vy };
+  const { height, width } = Dimensions.get("window");
+  const diagonal = pythagoras(height, width);
 
-  const velocity = pythagoras(speed.x, speed.y);
+  const velocity = pythagoras(gesture.vx, gesture.vy);
   const time = diagonal / velocity;
-  const multiplier = diagonal / velocity;
+  const multiplier = diagonal / velocity; // needs to be adjusted as current way velocity is measured is confusing.
+  console.log("multiplier:", multiplier);
 
-  const translateString = translationString(
-    speed.x * multiplier + startPos.x,
-    -speed.y * multiplier + startPos.y
-  );
-  let rotateString = "";
-
+  // const translateString = translationString(
+  //   speed.x * multiplier + startPos.x,
+  //   -speed.y * multiplier + startPos.y
+  // );
   const rotationPower = 200;
 
-  if (easeIn) {
-    element.style.transition = "ease " + time + "s";
-  } else {
-    element.style.transition = "ease-out " + time + "s";
-  }
+  // if (easeIn) {
+  //   element.style.transition = "ease " + time + "s";
+  // } else {
+  //   element.style.transition = "ease-out " + time + "s";
+  // }
 
-  if (getRotation(element) === 0) {
-    rotateString = rotationString((Math.random() - 0.5) * rotationPower);
-  } else if (getRotation(element) > 0) {
-    rotateString = rotationString((Math.random() * rotationPower) / 2 + getRotation(element));
-  } else {
-    rotateString = rotationString(((Math.random() - 1) * rotationPower) / 2 + getRotation(element));
-  }
+  // if (getRotation(element) === 0) {
+  //   rotateString = rotationString((Math.random() - 0.5) * rotationPower);
+  // } else if (getRotation(element) > 0) {
+  //   rotateString = rotationString((Math.random() * rotationPower) / 2 + getRotation(element));
+  // } else {
+  //   rotateString = rotationString(((Math.random() - 1) * rotationPower) / 2 + getRotation(element));
+  // }
+  console.log("velocity:", velocity);
+  set({
+    x: (multiplier * gesture.vx) / 2,
+    y: (multiplier * gesture.vy) / 2,
+    config: { friction: 50, tension: 100 * velocity },
+  });
+  // element.style.transform = translateString + rotateString;
 
-  element.style.transform = translateString + rotateString;
-
-  await sleep(time * 1000);
+  await await new Promise((resolve) => setTimeout(() => resolve(), 1000));
 };
 
-const animateBack = (element) => {
-  element.style.transition = settings.snapBackDuration + "ms";
-  const startingPoint = getTranslate(element);
-  const translation = translationString(
-    startingPoint.x * -settings.bouncePower,
-    startingPoint.y * -settings.bouncePower
-  );
-  const rotation = rotationString(getRotation(element) * -settings.bouncePower);
-  element.style.transform = translation + rotation;
+const animateBack = (set) => {
+  // translate back to the initial position
+  set({ x: 0, y: 0 });
+  // element.style.transition = settings.snapBackDuration + "ms";
+  // const startingPoint = getTranslate(element);
+  // const translation = translationString(
+  //   startingPoint.x * -settings.bouncePower,
+  //   startingPoint.y * -settings.bouncePower
+  // );
+  // const rotation = rotationString(getRotation(element) * -settings.bouncePower);
+  // element.style.transform = translation + rotation;
+  // setTimeout(() => {
+  //   element.style.transform = "none";
+  // }, settings.snapBackDuration * 0.75);
 
-  setTimeout(() => {
-    element.style.transform = "none";
-  }, settings.snapBackDuration * 0.75);
-
-  setTimeout(() => {
-    element.style.transition = "10ms";
-  }, settings.snapBackDuration);
+  // setTimeout(() => {
+  //   element.style.transition = "10ms";
+  // }, settings.snapBackDuration);
 };
 
 const getSwipeDirection = (speed) => {
@@ -115,9 +121,12 @@ const TinderCard = React.forwardRef(
     const [lastLocation, setLastLocation] = useState({ x: 0, y: 0 });
     const [speed, setSpeed] = useState({ x: 0, y: 0, time: new Date().getTime() });
 
-    const [{ x, y }, set] = useSpring(() => ({ x: 0, y: 0 }));
+    const [{ x, y }, set] = useSpring(() => ({
+      x: 0,
+      y: 0,
+      config: { friction: 50, tension: 800 },
+    }));
     const element = React.useRef();
-
     // const { x, y, size } = useSpring({
     //   x: down ? delta[0] : 0,
     //   bg: `linear-gradient(120deg, ${
@@ -147,20 +156,20 @@ const TinderCard = React.forwardRef(
     }));
 
     const handleSwipeReleased = React.useCallback(
-      async (element, speed) => {
+      async (set, gesture) => {
         // Check if this is a swipe
         if (
-          Math.abs(speed.x) > settings.swipeThreshold ||
-          Math.abs(speed.y) > settings.swipeThreshold
+          Math.abs(gesture.vx) > settings.swipeThreshold ||
+          Math.abs(gesture.vy) > settings.swipeThreshold
         ) {
-          const dir = getSwipeDirection(speed);
-
-          if (onSwipe) onSwipe(dir);
+          const dir = getSwipeDirection({ x: gesture.vx, y: gesture.vy });
+          console.log("direction", dir);
+          // if (onSwipe) onSwipe(dir);
 
           if (flickOnSwipe) {
             if (!preventSwipe.includes(dir)) {
-              await animateOut(element, speed);
-              element.style.display = "none";
+              await animateOut(gesture, set);
+              // element.style.display = "none";
               if (onCardLeftScreen) onCardLeftScreen(dir);
               return;
             }
@@ -168,7 +177,7 @@ const TinderCard = React.forwardRef(
         }
 
         // Card was not flicked away, animate back to start
-        animateBack(element);
+        animateBack(set);
       },
       [flickOnSwipe, onSwipe, onCardLeftScreen, preventSwipe]
     );
@@ -189,7 +198,6 @@ const TinderCard = React.forwardRef(
           },
           onPanResponderMove: (evt, gestureState) => {
             // The most recent move distance is gestureState.move{X,Y}
-            console.log("move event");
             const newLocation = {
               x: gestureState.dx,
               y: gestureState.dy,
@@ -209,6 +217,8 @@ const TinderCard = React.forwardRef(
             // The user has released all touches while this view is the
             // responder. This typically means a gesture has succeeded
             console.log("press out");
+            // enable
+            handleSwipeReleased(set, gestureState);
           },
         }),
       []
@@ -227,11 +237,10 @@ const TinderCard = React.forwardRef(
     //   ev.preventDefault()
     //   handleSwipeReleased(element.current, speed)
     // })
-    console.log("panHandlers", panResponder.panHandlers);
     return (
       <AnimatedView
         {...panResponder.panHandlers}
-        style={{ transform: interpolate([x, y], (x, y) => [{ translateX: x }, { translateY: y }]) }}
+        style={{ transform: [{ translateX: x }, { translateY: y }] }}
       >
         <Text>
           Location: x: {Math.round(lastLocation.x)} y: {Math.round(lastLocation.y)}
