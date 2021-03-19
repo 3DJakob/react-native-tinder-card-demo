@@ -5,7 +5,7 @@ import { useSpring, animated, interpolate } from "react-spring/native";
 const { height, width } = Dimensions.get("window");
 
 const settings = {
-  maxTilt: 15,
+  maxTilt: 15, // in deg
   rotationPower: 50,
   swipeThreshold: 1.5, // need to update this threshold for RN (1.5 seems reasonable...?)
 };
@@ -37,17 +37,20 @@ const animateOut = async (gesture, set, easeIn = false) => {
   // useSpring animates all frames between initial rotation state and final rotation state.
   const finalX = multiplier * gesture.vx;
   const finalY = multiplier * gesture.vy;
-  const finalRotationState = (gesture.vx * multiplier) / settings.rotationModifier;
+  const finalRotation = gesture.vx * 45;
+  const tension = velocity * 30;
+  console.log("vx:", gesture.vx);
   console.log("multiplier:", multiplier);
   console.log("velocity:", velocity);
-  console.log("finalRotation:", finalRotationState);
+  console.log("finalRotation:", finalRotation);
   console.log("x", finalX);
   console.log("y", finalY);
+  console.log("tension:", tension);
   set({
     x: finalX,
     y: finalY,
-    rot: finalRotationState, // set final rotation value based on gesture.vx
-    config: physics.animateOut,
+    rot: finalRotation, // set final rotation value based on gesture.vx
+    config: { friction: 50, tension },
   });
 
   // element.style.transform = translateString + rotateString;
