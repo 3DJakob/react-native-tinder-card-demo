@@ -1,13 +1,25 @@
 /* global WebKitCSSMatrix */
 import React, { useState } from "react";
 import { View, PanResponder, Text, Dimensions } from "react-native";
-import { useSpring, animated, interpolate, config } from "react-spring";
+import { useSpring, animated, interpolate } from "react-spring/native";
 
 const settings = {
-  friction: 50,
-  tension: 800,
   maxTilt: 5,
+  rotationModifier: 0.1,
+  rotationPower: 50,
   swipeThreshold: 1.5, // need to update this threshold for RN (1.5 seems reasonable...?)
+};
+
+// physical properties of the spring
+const physics = {
+  touchResponsive: {
+    friction: 50,
+    tension: 800,
+  },
+  animateOut: {
+    friction: 50,
+    tension: 800,
+  },
 };
 
 const pythagoras = (x, y) => {
@@ -15,29 +27,32 @@ const pythagoras = (x, y) => {
 };
 
 const animateOut = async (gesture, set, easeIn = false) => {
-  const startPos = { x: 0, y: 0 };
-  const speed = { x: gesture.vx, y: gesture.vy };
   const { height, width } = Dimensions.get("window");
   const diagonal = pythagoras(height, width);
 
   const velocity = pythagoras(gesture.vx, gesture.vy);
   const time = diagonal / velocity;
-  const multiplier = diagonal / velocity; // needs to be adjusted as current way velocity is measured is confusing.
+  const multiplier = diagonal / velocity; // needs to be adjusted as current way velocity is measured is unclear.
   console.log("multiplier:", multiplier);
   // calculate rotation of the element
-  // any way to read the current rotation value?
+  // don't need to read the current rotation value.
+  // useSpring animates all frames between initial rotation state and final rotation state.
+  const finalRotationState = gesture.vx * settings.rotationPowerOnRelease;
   console.log("velocity:", velocity);
-  // this part needs to be improved.
+  console.log("finalRotationState:", finalRotationState);
+
   set({
     x: (multiplier * gesture.vx) / 2,
     y: (multiplier * gesture.vy) / 2,
-    config: { friction: 50, tension: 100 * velocity },
+    rot: finalRotationState, // set final rotation value based on gesture.vx
+    config: physics.animateOut,
   });
-  // element.style.transform = translateString + rotateString;
 
+  // element.style.transform = translateString + rotateString;
+  // for now animate back
   await new Promise((resolve) =>
     setTimeout(() => {
-      set({ x: 0, y: 0 });
+      animateBack(set);
       resolve();
     }, 1000)
   );
@@ -45,7 +60,7 @@ const animateOut = async (gesture, set, easeIn = false) => {
 
 const animateBack = (set) => {
   // translate back to the initial position
-  set({ x: 0, y: 0 });
+  set({ x: 0, y: 0, rot: 0, config: physics.touchResponsive });
 };
 
 const getSwipeDirection = (speed) => {
@@ -67,10 +82,11 @@ const TinderCard = React.forwardRef(
     const [lastLocation, setLastLocation] = useState({ x: 0, y: 0 });
     const [speed, setSpeed] = useState({ x: 0, y: 0, time: new Date().getTime() });
 
-    const [{ x, y }, set] = useSpring(() => ({
+    const [{ x, y, rot }, set] = useSpring(() => ({
       x: 0,
       y: 0,
-      config: { friction: settings.friction, tension: settings.tension },
+      rot: 0,
+      config: physics.touchResponsive,
     }));
 
     React.useImperativeHandle(ref, () => ({
@@ -140,11 +156,12 @@ const TinderCard = React.forwardRef(
               y: gestureState.dy,
               time: new Date().getTime(),
             };
-            // use guestureState to derive planar velocities
+            // use guestureState.vx / guestureState.vy for velocity calculations
             setSpeed({ x: gestureState.vx, y: gestureState.vy });
             setLastLocation(newLocation);
             // translate element
-            set({ x: gestureState.dx, y: gestureState.dy });
+            const rot = gestureState.dx * settings.rotationModifier;
+            set({ x: gestureState.dx, y: gestureState.dy, rot });
           },
           onPanResponderTerminationRequest: (evt, gestureState) => {
             console.log("terminate req");
@@ -163,7 +180,13 @@ const TinderCard = React.forwardRef(
     return (
       <AnimatedView
         {...panResponder.panHandlers}
-        style={{ transform: [{ translateX: x }, { translateY: y }] }}
+        style={{
+          transform: [
+            { translateX: x },
+            { translateY: y },
+            { rotate: rot.interpolate((rot) => `${rot}deg`) },
+          ],
+        }}
       >
         <Text>
           Location: x: {Math.round(lastLocation.x)} y: {Math.round(lastLocation.y)}
