@@ -2,10 +2,10 @@
 import React, { useState } from "react";
 import { View, PanResponder, Text, Dimensions } from "react-native";
 import { useSpring, animated, interpolate } from "react-spring/native";
+const { height, width } = Dimensions.get("window");
 
 const settings = {
-  maxTilt: 5,
-  rotationModifier: 0.1,
+  rotationModifier: 25,
   rotationPower: 50,
   swipeThreshold: 1.5, // need to update this threshold for RN (1.5 seems reasonable...?)
 };
@@ -27,23 +27,25 @@ const pythagoras = (x, y) => {
 };
 
 const animateOut = async (gesture, set, easeIn = false) => {
-  const { height, width } = Dimensions.get("window");
   const diagonal = pythagoras(height, width);
 
   const velocity = pythagoras(gesture.vx, gesture.vy);
   const time = diagonal / velocity;
   const multiplier = diagonal / velocity; // needs to be adjusted as current way velocity is measured is unclear.
-  console.log("multiplier:", multiplier);
   // calculate rotation of the element
   // don't need to read the current rotation value.
   // useSpring animates all frames between initial rotation state and final rotation state.
-  const finalRotationState = gesture.vx * settings.rotationPowerOnRelease;
+  const finalX = multiplier * gesture.vx;
+  const finalY = multiplier * gesture.vy;
+  const finalRotationState = (gesture.vx * multiplier) / settings.rotationModifier;
+  console.log("multiplier:", multiplier);
   console.log("velocity:", velocity);
-  console.log("finalRotationState:", finalRotationState);
-
+  console.log("finalRotation:", finalRotationState);
+  console.log("x", finalX);
+  console.log("y", finalY);
   set({
-    x: (multiplier * gesture.vx) / 2,
-    y: (multiplier * gesture.vy) / 2,
+    x: finalX,
+    y: finalY,
     rot: finalRotationState, // set final rotation value based on gesture.vx
     config: physics.animateOut,
   });
@@ -67,7 +69,7 @@ const getSwipeDirection = (speed) => {
   if (Math.abs(speed.x) > Math.abs(speed.y)) {
     return speed.x > 0 ? "right" : "left";
   } else {
-    return speed.y > 0 ? "up" : "down";
+    return speed.y > 0 ? "down" : "up";
   }
 };
 
@@ -160,7 +162,7 @@ const TinderCard = React.forwardRef(
             setSpeed({ x: gestureState.vx, y: gestureState.vy });
             setLastLocation(newLocation);
             // translate element
-            const rot = gestureState.dx * settings.rotationModifier;
+            const rot = (gestureState.dx / width) * settings.rotationModifier;
             set({ x: gestureState.dx, y: gestureState.dy, rot });
           },
           onPanResponderTerminationRequest: (evt, gestureState) => {
