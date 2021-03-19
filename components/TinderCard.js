@@ -5,7 +5,7 @@ import { useSpring, animated, interpolate } from "react-spring/native";
 const { height, width } = Dimensions.get("window");
 
 const settings = {
-  rotationModifier: 25,
+  rotationModifier: 15,
   rotationPower: 50,
   swipeThreshold: 1.5, // need to update this threshold for RN (1.5 seems reasonable...?)
 };
@@ -162,7 +162,7 @@ const TinderCard = React.forwardRef(
             setSpeed({ x: gestureState.vx, y: gestureState.vy });
             setLastLocation(newLocation);
             // translate element
-            const rot = (gestureState.dx / width) * settings.rotationModifier;
+            const rot = ((2 * gestureState.dx) / width) * settings.rotationModifier;
             set({ x: gestureState.dx, y: gestureState.dy, rot });
           },
           onPanResponderTerminationRequest: (evt, gestureState) => {
