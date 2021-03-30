@@ -37,11 +37,6 @@ const animateOut = async (gesture, setSpringTarget) => {
   const finalRotation = gesture.vx * 45
   const duration = diagonal / velocity
 
-  console.log('THE DIAGONAL', diagonal)
-  console.log('THE PWR', velocity)
-  console.log('THE ROT', finalRotation)
-  console.log('THE DURATION', duration)
-
   setSpringTarget({
     x: finalX,
     y: finalY,
