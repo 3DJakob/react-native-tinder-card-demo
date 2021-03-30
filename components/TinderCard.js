@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { View, PanResponder, Dimensions } from 'react-native'
-import { useSpring, animated } from 'react-spring/native'
+import { useSpring, animated, interpolate } from 'react-spring/native'
 const { height, width } = Dimensions.get('window')
 
 const settings = {
@@ -36,6 +36,11 @@ const animateOut = async (gesture, setSpringTarget) => {
   const finalY = diagonal * gesture.vy
   const finalRotation = gesture.vx * 45
   const duration = diagonal / velocity
+
+  console.log('THE DIAGONAL', diagonal)
+  console.log('THE PWR', velocity)
+  console.log('THE ROT', finalRotation)
+  console.log('THE DURATION', duration)
 
   setSpringTarget({
     x: finalX,
@@ -86,9 +91,10 @@ const TinderCard = React.forwardRef(
 
     React.useImperativeHandle(ref, () => ({
       async swipe (dir = 'right') {
+        console.log('SWIIIIIPE!')
         if (onSwipe) onSwipe(dir)
-        const power = 1000
-        const disturbance = (Math.random() - 0.5) * 100
+        const power = 1.3
+        const disturbance = (Math.random() - 0.5) / 2
         if (dir === 'right') {
           await animateOut({ vx: power, vy: disturbance }, setSpringTarget)
         } else if (dir === 'left') {
@@ -98,7 +104,7 @@ const TinderCard = React.forwardRef(
         } else if (dir === 'down') {
           await animateOut({ vx: disturbance, vy: -power }, setSpringTarget)
         }
-        // element.current.style.display = 'none'
+        //   // element.current.style.display = 'none'
         if (onCardLeftScreen) onCardLeftScreen(dir)
       }
     }))
@@ -115,8 +121,8 @@ const TinderCard = React.forwardRef(
 
           if (flickOnSwipe) {
             if (!preventSwipe.includes(dir)) {
-              if (onSwipe) onSwipe(dir)
               console.log('plz animate out!!')
+              if (onSwipe) onSwipe(dir)
 
               await animateOut(gesture, setSpringTarget)
               // element.style.display = "none";
@@ -152,6 +158,7 @@ const TinderCard = React.forwardRef(
             setSpeed({ x: gestureState.vx, y: gestureState.vy })
             // translate element
             const rot = ((300 * gestureState.vx) / width) * settings.maxTilt // Magic number 300 different on different devices? Run on physical device!
+            console.log(rot)
             setSpringTarget({ x: gestureState.dx, y: gestureState.dy, rot, config: physics.touchResponsive })
           },
           onPanResponderTerminationRequest: (evt, gestureState) => {
@@ -177,6 +184,7 @@ const TinderCard = React.forwardRef(
             { translateX: x },
             { translateY: y },
             { rotate: rot.interpolate((rot) => `${rot}deg`) }
+            // { rotate: `${rot}deg` }
           ]
         }}
       >
