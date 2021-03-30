@@ -1,144 +1,136 @@
-/* global WebKitCSSMatrix */
-import React, { useState } from "react";
-import { View, PanResponder, Text, Dimensions } from "react-native";
-import { useSpring, animated, interpolate } from "react-spring/native";
-const { height, width } = Dimensions.get("window");
+import React, { useState } from 'react'
+import { View, PanResponder, Dimensions } from 'react-native'
+import { useSpring, animated } from 'react-spring/native'
+const { height, width } = Dimensions.get('window')
 
 const settings = {
   maxTilt: 15, // in deg
   rotationPower: 50,
-  swipeThreshold: 1.5, // need to update this threshold for RN (1.5 seems reasonable...?)
-};
+  swipeThreshold: 1.5 // need to update this threshold for RN (1.5 seems reasonable...?)
+}
 
 // physical properties of the spring
 const physics = {
   touchResponsive: {
     friction: 50,
-    tension: 800,
+    tension: 2000
   },
   animateOut: {
-    friction: 50,
-    tension: 800,
+    friction: 30,
+    tension: 400
   },
-};
+  animateBack: {
+    friction: 10,
+    tension: 200
+  }
+}
 
 const pythagoras = (x, y) => {
-  return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
-};
+  return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2))
+}
 
-const animateOut = async (gesture, set, easeIn = false) => {
-  const diagonal = pythagoras(height, width);
+const animateOut = async (gesture, setSpringTarget) => {
+  const diagonal = pythagoras(height, width)
+  const velocity = pythagoras(gesture.vx, gesture.vy)
+  const finalX = diagonal * gesture.vx
+  const finalY = diagonal * gesture.vy
+  const finalRotation = gesture.vx * 45
+  const duration = diagonal / velocity
 
-  const velocity = pythagoras(gesture.vx, gesture.vy);
-  const time = diagonal / velocity;
-  const multiplier = diagonal / velocity; // needs to be adjusted as current way velocity is measured is unclear.
-  // calculate rotation of the element
-  // don't need to read the current rotation value.
-  // useSpring animates all frames between initial rotation state and final rotation state.
-  const finalX = multiplier * gesture.vx;
-  const finalY = multiplier * gesture.vy;
-  const finalRotation = gesture.vx * 45;
-  const tension = velocity * 30;
-  console.log("vx:", gesture.vx);
-  console.log("multiplier:", multiplier);
-  console.log("velocity:", velocity);
-  console.log("finalRotation:", finalRotation);
-  console.log("x", finalX);
-  console.log("y", finalY);
-  console.log("tension:", tension);
-  set({
+  setSpringTarget({
     x: finalX,
     y: finalY,
     rot: finalRotation, // set final rotation value based on gesture.vx
-    config: { friction: 50, tension },
-  });
+    config: { ...physics.animateOut, duration: duration }
+  })
 
   // element.style.transform = translateString + rotateString;
   // for now animate back
-  await new Promise((resolve) =>
+  return await new Promise((resolve) =>
     setTimeout(() => {
-      animateBack(set);
-      resolve();
-    }, 1000)
-  );
-};
+      // animateBack(setSpringTarget)
+      resolve()
+    }, duration)
+  )
+}
 
-const animateBack = (set) => {
+const animateBack = (setSpringTarget) => {
   // translate back to the initial position
-  set({ x: 0, y: 0, rot: 0, config: physics.touchResponsive });
-};
+  setSpringTarget({ x: 0, y: 0, rot: 0, config: physics.animateBack })
+}
 
 const getSwipeDirection = (speed) => {
   if (Math.abs(speed.x) > Math.abs(speed.y)) {
-    return speed.x > 0 ? "right" : "left";
+    return speed.x > 0 ? 'right' : 'left'
   } else {
-    return speed.y > 0 ? "down" : "up";
+    return speed.y > 0 ? 'down' : 'up'
   }
-};
+}
 
 // must be created outside of the TinderCard forwardRef
-const AnimatedView = animated(View);
+const AnimatedView = animated(View)
 
 const TinderCard = React.forwardRef(
   (
     { flickOnSwipe = true, children, onSwipe, onCardLeftScreen, className, preventSwipe = [] },
     ref
   ) => {
-    const [lastLocation, setLastLocation] = useState({ x: 0, y: 0 });
-    const [speed, setSpeed] = useState({ x: 0, y: 0, time: new Date().getTime() });
+    const [speed, setSpeed] = useState({ x: 0, y: 0 }) // Super ugly code but somehow neccessary to trigger update on drag?
 
-    const [{ x, y, rot }, set] = useSpring(() => ({
+    const [{ x, y, rot }, setSpringTarget] = useSpring(() => ({
       x: 0,
       y: 0,
       rot: 0,
-      config: physics.touchResponsive,
-    }));
+      config: physics.touchResponsive
+    }))
 
     React.useImperativeHandle(ref, () => ({
-      async swipe(dir = "right") {
-        if (onSwipe) onSwipe(dir);
-        const power = 1000;
-        const disturbance = (Math.random() - 0.5) * 100;
-        if (dir === "right") {
-          await animateOut(element.current, { x: power, y: disturbance }, true);
-        } else if (dir === "left") {
-          await animateOut(element.current, { x: -power, y: disturbance }, true);
-        } else if (dir === "up") {
-          await animateOut(element.current, { x: disturbance, y: power }, true);
-        } else if (dir === "down") {
-          await animateOut(element.current, { x: disturbance, y: -power }, true);
+      async swipe (dir = 'right') {
+        if (onSwipe) onSwipe(dir)
+        const power = 1000
+        const disturbance = (Math.random() - 0.5) * 100
+        if (dir === 'right') {
+          await animateOut({ vx: power, vy: disturbance }, setSpringTarget)
+        } else if (dir === 'left') {
+          await animateOut({ vx: -power, vy: disturbance }, setSpringTarget)
+        } else if (dir === 'up') {
+          await animateOut({ vx: disturbance, vy: power }, setSpringTarget)
+        } else if (dir === 'down') {
+          await animateOut({ vx: disturbance, vy: -power }, setSpringTarget)
         }
-        element.current.style.display = "none";
-        if (onCardLeftScreen) onCardLeftScreen(dir);
-      },
-    }));
+        // element.current.style.display = 'none'
+        if (onCardLeftScreen) onCardLeftScreen(dir)
+      }
+    }))
 
     const handleSwipeReleased = React.useCallback(
-      async (set, gesture) => {
+      async (setSpringTarget, gesture) => {
         // Check if this is a swipe
         if (
           Math.abs(gesture.vx) > settings.swipeThreshold ||
           Math.abs(gesture.vy) > settings.swipeThreshold
         ) {
-          const dir = getSwipeDirection({ x: gesture.vx, y: gesture.vy });
-          console.log("direction", dir);
-          // if (onSwipe) onSwipe(dir);
+          const dir = getSwipeDirection({ x: gesture.vx, y: gesture.vy })
+          console.log('direction', dir)
 
           if (flickOnSwipe) {
             if (!preventSwipe.includes(dir)) {
-              await animateOut(gesture, set);
+              if (onSwipe) onSwipe(dir)
+              console.log('plz animate out!!')
+
+              await animateOut(gesture, setSpringTarget)
               // element.style.display = "none";
-              if (onCardLeftScreen) onCardLeftScreen(dir);
-              return;
+              if (onCardLeftScreen) onCardLeftScreen(dir)
+              return
             }
           }
         }
 
         // Card was not flicked away, animate back to start
-        animateBack(set);
+        animateBack(setSpringTarget)
       },
       [flickOnSwipe, onSwipe, onCardLeftScreen, preventSwipe]
-    );
+    )
 
     const panResponder = React.useMemo(
       () =>
@@ -152,36 +144,31 @@ const TinderCard = React.forwardRef(
           onPanResponderGrant: (evt, gestureState) => {
             // The gesture has started.
             // Probably wont need this anymore as postion i relative to swipe!
-            console.log("touch down!");
+            console.log('touch down!')
+            setSpringTarget({ x: gestureState.dx, y: gestureState.dy, rot: 0, config: physics.touchResponsive })
           },
           onPanResponderMove: (evt, gestureState) => {
-            // The most recent move distance is gestureState.move{X,Y}
-            const newLocation = {
-              x: gestureState.dx,
-              y: gestureState.dy,
-              time: new Date().getTime(),
-            };
             // use guestureState.vx / guestureState.vy for velocity calculations
-            setSpeed({ x: gestureState.vx, y: gestureState.vy });
-            setLastLocation(newLocation);
+            setSpeed({ x: gestureState.vx, y: gestureState.vy })
             // translate element
-            const rot = ((2 * gestureState.dx) / width) * settings.maxTilt;
-            set({ x: gestureState.dx, y: gestureState.dy, rot });
+            const rot = ((300 * gestureState.vx) / width) * settings.maxTilt // Magic number 300 different on different devices? Run on physical device!
+            setSpringTarget({ x: gestureState.dx, y: gestureState.dy, rot, config: physics.touchResponsive })
           },
           onPanResponderTerminationRequest: (evt, gestureState) => {
-            console.log("terminate req");
-            return true;
+            console.log('terminate req')
+            return true
           },
           onPanResponderRelease: (evt, gestureState) => {
             // The user has released all touches while this view is the
             // responder. This typically means a gesture has succeeded
-            console.log("touch up");
+            console.log('touch up')
             // enable
-            handleSwipeReleased(set, gestureState);
-          },
+            handleSwipeReleased(setSpringTarget, gestureState)
+          }
         }),
       []
-    );
+    )
+
     return (
       <AnimatedView
         {...panResponder.panHandlers}
@@ -189,21 +176,15 @@ const TinderCard = React.forwardRef(
           transform: [
             { translateX: x },
             { translateY: y },
-            { rotate: rot.interpolate((rot) => `${rot}deg`) },
-          ],
+            { rotate: rot.interpolate((rot) => `${rot}deg`) }
+          ]
         }}
       >
-        <Text>
-          Location: x: {Math.round(lastLocation.x)} y: {Math.round(lastLocation.y)}
-        </Text>
-        <Text>
-          Speed: x: {Math.round(speed.x * 10) / 10} y: {Math.round(speed.y * 10) / 10}
-        </Text>
         {children}
       </AnimatedView>
-    );
+    )
   }
-);
+)
 
 // module.exports = TinderCard
-export default TinderCard;
+export default TinderCard
