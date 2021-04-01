@@ -94,7 +94,7 @@ function Simple () {
 
   return (
     <Container>
-      <Header>React Tinder Card</Header>
+      <Header>React Native Tinder Card</Header>
       <CardContainer>
         {characters.map((character) =>
           <TinderCard className='swipe' key={character.name} onSwipe={(dir) => swiped(dir, character.name)} onCardLeftScreen={() => outOfFrame(character.name)}>
