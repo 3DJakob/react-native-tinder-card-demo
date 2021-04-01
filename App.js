@@ -14,6 +14,7 @@ const Row = styled.View`
   flex-direction: row;
   justify-content: center;
   align-items: center;
+  z-index: -100;
 `
 
 const InstructionText = styled.Text`
@@ -21,7 +22,7 @@ const InstructionText = styled.Text`
 `
 
 export default function App () {
-  const [showAdvanced, setShowAdvanced] = useState(false)
+  const [showAdvanced, setShowAdvanced] = useState(true)
 
   return (
     <Container>
