@@ -121,7 +121,7 @@ const Advanced = () => {
       <Header>React Native Tinder Card</Header>
       <CardContainer>
         {characters.map((character, index) =>
-          <TinderCard ref={childRefs[index]} className='swipe' key={character.name} onSwipe={(dir) => swiped(dir, character.name)} onCardLeftScreen={() => outOfFrame(character.name)}>
+          <TinderCard ref={childRefs[index]} key={character.name} onSwipe={(dir) => swiped(dir, character.name)} onCardLeftScreen={() => outOfFrame(character.name)}>
             <Card>
               <CardImage source={character.img}>
                 <CardTitle>{character.name}</CardTitle>

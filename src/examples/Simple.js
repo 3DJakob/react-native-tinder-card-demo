@@ -97,7 +97,7 @@ function Simple () {
       <Header>React Native Tinder Card</Header>
       <CardContainer>
         {characters.map((character) =>
-          <TinderCard className='swipe' key={character.name} onSwipe={(dir) => swiped(dir, character.name)} onCardLeftScreen={() => outOfFrame(character.name)}>
+          <TinderCard key={character.name} onSwipe={(dir) => swiped(dir, character.name)} onCardLeftScreen={() => outOfFrame(character.name)}>
             <Card>
               <CardImage source={character.img}>
                 <CardTitle>{character.name}</CardTitle>
