@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import styled from 'styled-components'
-import TinderCard from '../components/TinderCard'
-// import TinderCard from 'react-tinder-card'
+import TinderCard from 'react-tinder-card'
 
 const Container = styled.View`
     display: flex;

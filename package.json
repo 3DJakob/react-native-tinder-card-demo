@@ -17,6 +17,7 @@
     "react-native": "https://github.com/expo/react-native/archive/sdk-40.0.1.tar.gz",
     "react-native-web": "~0.13.12",
     "react-spring": "^8.0.27",
+    "react-tinder-card": "file:../react-tinder-card/react-tinder-card-1.3.1.tgz",
     "styled-components": "^5.2.1"
   },
   "devDependencies": {

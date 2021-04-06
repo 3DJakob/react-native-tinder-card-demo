@@ -3,8 +3,6 @@ import { View, PanResponder, Dimensions } from 'react-native'
 import { useSpring, animated } from 'react-spring/native'
 const { height, width } = Dimensions.get('window')
 
-console.log(width, 'width')
-
 const settings = {
   maxTilt: 25, // in deg
   rotationPower: 50,
@@ -138,7 +136,6 @@ const TinderCard = React.forwardRef(
           onPanResponderGrant: (evt, gestureState) => {
             // The gesture has started.
             // Probably wont need this anymore as postion i relative to swipe!
-            console.log('touch down!')
             setSpringTarget({ x: gestureState.dx, y: gestureState.dy, rot: 0, config: physics.touchResponsive })
           },
           onPanResponderMove: (evt, gestureState) => {
@@ -146,17 +143,14 @@ const TinderCard = React.forwardRef(
             // translate element
             let rot = ((300 * gestureState.vx) / width) * 15// Magic number 300 different on different devices? Run on physical device!
             rot = Math.max(Math.min(rot, settings.maxTilt), -settings.maxTilt)
-            console.log(rot)
             setSpringTarget({ x: gestureState.dx, y: gestureState.dy, rot, config: physics.touchResponsive })
           },
           onPanResponderTerminationRequest: (evt, gestureState) => {
-            console.log('terminate req')
             return true
           },
           onPanResponderRelease: (evt, gestureState) => {
             // The user has released all touches while this view is the
             // responder. This typically means a gesture has succeeded
-            console.log('touch up')
             // enable
             handleSwipeReleased(setSpringTarget, gestureState)
           }

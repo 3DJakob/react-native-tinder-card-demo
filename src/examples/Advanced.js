@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react'
 import { Button } from 'react-native'
 import styled from 'styled-components'
-import TinderCard from '../components/TinderCard'
+import TinderCard from 'react-tinder-card'
 
 const Container = styled.View`
     display: flex;
@@ -102,7 +102,6 @@ const Advanced = () => {
   const outOfFrame = (name) => {
     console.log(name + ' left the screen!')
     charactersState = charactersState.filter(character => character.name !== name)
-    console.log(characters.map(char => char.name))
     setCharacters(charactersState)
   }
 
