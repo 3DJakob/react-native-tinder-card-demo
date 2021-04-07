@@ -1,6 +1,6 @@
 # React Tinder Card Demo
 
-A demo project to [react-native-tinder-card](https://github.com/3DJakob/react-native-tinder-card) npm module.
+A demo project to [react-tinder-card](https://github.com/3DJakob/react-tinder-card) npm module.
 
 ## Demo
 
