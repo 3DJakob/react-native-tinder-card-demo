@@ -1,36 +1,35 @@
 import React, { useState } from 'react'
-import { Switch } from 'react-native'
+import { Switch, View, Text } from 'react-native'
 import Advanced from './src/examples/Advanced'
 import Simple from './src/examples/Simple'
-import styled from 'styled-components'
 
-const Container = styled.View`
-  min-height: 100%;
-  justify-content: center;
-  align-items: center;
-`
-
-const Row = styled.View`
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  z-index: -100;
-`
-
-const InstructionText = styled.Text`
-  margin-right: 10px;
-`
+const styles = {
+  container: {
+    minHeight: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: -100,
+  },
+  instructionText: {
+    marginRight: 10,
+  }
+}
 
 export default function App () {
   const [showAdvanced, setShowAdvanced] = useState(true)
 
   return (
-    <Container>
+    <View style={styles.container}>
       {showAdvanced ? <Advanced /> : <Simple />}
-      <Row>
-        <InstructionText>Show advanced example</InstructionText>
+      <View style={styles.row}>
+        <Text style={styles.instructionText}>Show advanced example</Text>
         <Switch value={showAdvanced} onValueChange={setShowAdvanced} />
-      </Row>
-    </Container>
+      </View>
+    </View>
   )
 }
