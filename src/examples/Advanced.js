@@ -1,65 +1,59 @@
 import React, { useState, useMemo } from 'react'
-import { Button } from 'react-native'
-import styled from 'styled-components'
+import { ImageBackground, Text, View, Button } from 'react-native'
 import TinderCard from 'react-tinder-card'
 
-const Container = styled.View`
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-`
-
-const Header = styled.Text`
-    color: #000;
-    font-size: 30px;
-    margin-bottom: 30px;
-`
-
-const CardContainer = styled.View`
-    width: 90%;
-    max-width: 260px;
-    height: 300px;
-`
-
-const Card = styled.View`
-    position: absolute;
-    background-color: #fff;
-    width: 100%;
-    max-width: 260px;
-    height: 300px;
-    shadow-color: black;
-    shadow-opacity: 0.2;
-    shadow-radius: 20px;
-    border-radius: 20px;
-    resize-mode: cover;
-`
-
-const CardImage = styled.ImageBackground`
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    border-radius: 20px;
-`
-
-const CardTitle = styled.Text`
-    position: absolute;
-    bottom: 0;
-    margin: 10px;
-    color: #fff;
-`
-
-const Buttons = styled.View`
-    margin: 20px;
-    z-index: -100;
-`
-
-const InfoText = styled.Text`
-    height: 28px;
-    justify-content: center;
-    display: flex;
-    z-index: -100;
-`
+const styles = {
+  container: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  header: {
+    color: '#000',
+    fontSize: 30,
+    marginBottom: 30,
+  },
+  cardContainer: {
+    width: '90%',
+    maxWidth: 260,
+    height: 300,
+  },
+  card: {
+    position: 'absolute',
+    backgroundColor: '#fff',
+    width: '100%',
+    maxWidth: 260,
+    height: 300,
+    shadowColor: 'black',
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    borderRadius: 20,
+    resizeMode: 'cover',
+  },
+  cardImage: {
+    width: '100%',
+    height: '100%',
+    overflow: 'hidden',
+    borderRadius: 20,
+  },
+  cardTitle: {
+    position: 'absolute',
+    bottom: 0,
+    margin: 10,
+    color: '#fff',
+  },
+  buttons: {
+    margin: 20,
+    zIndex: -100,
+  },
+  infoText: {
+    height: 28,
+    justifyContent: 'center',
+    display: 'flex',
+    zIndex: -100,
+  }
+}
 
 const db = [
   {
@@ -116,25 +110,25 @@ const Advanced = () => {
   }
 
   return (
-    <Container>
-      <Header>React Native Tinder Card</Header>
-      <CardContainer>
+    <View style={styles.container}>
+      <Text style={styles.header}>React Native Tinder Card</Text>
+      <View style={styles.cardContainer}>
         {characters.map((character, index) =>
           <TinderCard ref={childRefs[index]} key={character.name} onSwipe={(dir) => swiped(dir, character.name)} onCardLeftScreen={() => outOfFrame(character.name)}>
-            <Card>
-              <CardImage source={character.img}>
-                <CardTitle>{character.name}</CardTitle>
-              </CardImage>
-            </Card>
+            <View style={styles.card}>
+              <ImageBackground style={styles.cardImage} source={character.img}>
+                <Text style={styles.cardTitle}>{character.name}</Text>
+              </ImageBackground>
+            </View>
           </TinderCard>
         )}
-      </CardContainer>
-      <Buttons>
+      </View>
+      <View style={styles.buttons}>
         <Button onPress={() => swipe('left')} title='Swipe left!' />
         <Button onPress={() => swipe('right')} title='Swipe right!' />
-      </Buttons>
-      {lastDirection ? <InfoText key={lastDirection}>You swiped {lastDirection}</InfoText> : <InfoText>Swipe a card or press a button to get started!</InfoText>}
-    </Container>
+      </View>
+      {lastDirection ? <Text style={styles.infoText} key={lastDirection}>You swiped {lastDirection}</Text> : <Text style={styles.infoText}>Swipe a card or press a button to get started!</Text>}
+    </View>
   )
 }
 
